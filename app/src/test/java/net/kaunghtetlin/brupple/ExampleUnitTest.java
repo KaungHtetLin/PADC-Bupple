@@ -1,4 +1,4 @@
-package net.kaunghtetlin.bupple;
+package net.kaunghtetlin.brupple;
 
 import org.junit.Test;
 

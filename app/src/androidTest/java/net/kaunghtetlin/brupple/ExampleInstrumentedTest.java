@@ -1,4 +1,4 @@
-package net.kaunghtetlin.bupple;
+package net.kaunghtetlin.brupple;
 
 import android.content.Context;
 import android.support.test.InstrumentationRegistry;
