@@ -19,32 +19,40 @@ import org.greenrobot.eventbus.ThreadMode;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.inject.Inject;
+
 /**
  * Created by Kaung Htet Lin on 1/10/2018.
  */
 
 public class PromotionsModel {
 
-
     private static PromotionsModel objInstance;
 
     private List<PromotionsVO> mPromotions;
     private int mPromotionsPageIndex = 1;
 
-    private PromotionsModel() {
+    @Inject
+    BurppleDataAgentImpl mBurppleDataAgentImpl;
+
+    public PromotionsModel(Context context) {
         EventBus.getDefault().register(this);
         mPromotions = new ArrayList<>();
-    }
 
+        BurppleApp burppleApp = (BurppleApp) context.getApplicationContext();
+        burppleApp.getAppComponent().inject(this);
+    }
+/*
     public static PromotionsModel getObjInstance() {
         if (objInstance == null) {
             objInstance = new PromotionsModel();
         }
         return objInstance;
     }
+*/
 
     public void startLoadingPromotions(Context context) {
-        BurppleDataAgentImpl.getObjInstance().loadPromotions(AppConstants.ACCESS_TOKEN,
+        mBurppleDataAgentImpl.loadPromotions(AppConstants.ACCESS_TOKEN,
                 mPromotionsPageIndex, context);
     }
 
@@ -56,7 +64,7 @@ public class PromotionsModel {
     }
 
     public void loadMorePromotions(Context context) {
-        BurppleDataAgentImpl.getObjInstance().loadPromotions(AppConstants.ACCESS_TOKEN,
+        mBurppleDataAgentImpl.loadPromotions(AppConstants.ACCESS_TOKEN,
                 mPromotionsPageIndex, context);
     }
 
@@ -87,6 +95,7 @@ public class PromotionsModel {
             BurppleShopVO publication = promotions.getBurpplePromotionShop();
             burppleShopCVList.add(publication.parseToContentValues());
 
+
             for (String terms : promotions.getBurpplePromotionTerms()) {
                 ContentValues termsInPromotionsCV = new ContentValues();
                 termsInPromotionsCV.put(BurppleContract.TermsEntry.COLUMN_PROMOTIONS_ID, promotions.getBurpplePromotionId());
@@ -98,15 +107,15 @@ public class PromotionsModel {
 
         int insertedShop = event.getContext().getContentResolver().bulkInsert(BurppleContract.ShopEntry.CONTENT_URI,
                 burppleShopCVList.toArray(new ContentValues[0]));
-        Log.d(BurppleApp.LOG_TAG, "insertedPublications : " + insertedShop);
-
+        Log.d(BurppleApp.LOG_TAG, "inserted shops : " + insertedShop);
 
         int insertedTermsInPromotions = event.getContext().getContentResolver().bulkInsert(BurppleContract.TermsEntry.CONTENT_URI,
                 termsInPromotionsCVList.toArray(new ContentValues[0]));
-        Log.d(BurppleApp.LOG_TAG, "insertedImagesInNews : " + insertedTermsInPromotions);
+        Log.d(BurppleApp.LOG_TAG, "inserted terms-in-promotions : " + insertedTermsInPromotions);
 
         int insertedPromotions = event.getContext().getContentResolver().bulkInsert(BurppleContract.PromotionsEntry.CONTENT_URI, promotionsCVs);
         Log.d(BurppleApp.LOG_TAG, "Inserted Rows" + insertedPromotions);
+
     }
 
 }

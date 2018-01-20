@@ -18,6 +18,8 @@ import org.greenrobot.eventbus.ThreadMode;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.inject.Inject;
+
 /**
  * Created by Kaung Htet Lin on 1/18/2018.
  */
@@ -29,20 +31,26 @@ public class FeaturedModel {
     private List<FeaturedVO> mFeatured;
     private int mFeaturedPageIndex = 1;
 
-    private FeaturedModel() {
+    @Inject
+    BurppleDataAgentImpl mBurppleDataAgentImpl;
+
+    public FeaturedModel(Context context) {
         EventBus.getDefault().register(this);
         mFeatured = new ArrayList<>();
+
+        BurppleApp burppleApp = (BurppleApp) context.getApplicationContext();
+        burppleApp.getAppComponent().inject(this);
     }
 
-    public static FeaturedModel getObjInstance() {
+  /*  public static FeaturedModel getObjInstance() {
         if (objInstance == null) {
             objInstance = new FeaturedModel();
         }
         return objInstance;
-    }
+    }*/
 
     public void startLoadingFeatured(Context context) {
-        BurppleDataAgentImpl.getObjInstance().loadFeatured(AppConstants.ACCESS_TOKEN,
+        mBurppleDataAgentImpl.loadFeatured(AppConstants.ACCESS_TOKEN,
                 mFeaturedPageIndex, context);
     }
 
@@ -54,7 +62,7 @@ public class FeaturedModel {
     }
 
     public void loadMoreFeatured(Context context) {
-        BurppleDataAgentImpl.getObjInstance().loadFeatured(AppConstants.ACCESS_TOKEN,
+        mBurppleDataAgentImpl.loadFeatured(AppConstants.ACCESS_TOKEN,
                 mFeaturedPageIndex, context);
     }
 

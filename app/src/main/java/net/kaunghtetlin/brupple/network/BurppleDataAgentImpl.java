@@ -29,7 +29,7 @@ public class BurppleDataAgentImpl implements BurppleDataAgent {
 
     private BurppleApi theAPI;
 
-    private BurppleDataAgentImpl() {
+    public BurppleDataAgentImpl() {
         OkHttpClient okHttpClient = new OkHttpClient.Builder()
                 .connectTimeout(60, TimeUnit.SECONDS)
                 .writeTimeout(60, TimeUnit.SECONDS)
@@ -45,12 +45,12 @@ public class BurppleDataAgentImpl implements BurppleDataAgent {
         theAPI = retrofit.create(BurppleApi.class);
     }
 
-    public static BurppleDataAgentImpl getObjInstance() {
+ /*   public static BurppleDataAgentImpl getObjInstance() {
         if (objInstance == null) {
             objInstance = new BurppleDataAgentImpl();
         }
         return objInstance;
-    }
+    }*/
 
 
     @Override

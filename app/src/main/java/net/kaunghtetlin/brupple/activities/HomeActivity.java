@@ -1,5 +1,6 @@
 package net.kaunghtetlin.brupple.activities;
 
+import android.content.Context;
 import android.database.Cursor;
 import android.graphics.Color;
 import android.os.Bundle;
@@ -18,6 +19,7 @@ import com.aurelhubert.ahbottomnavigation.AHBottomNavigation;
 import com.aurelhubert.ahbottomnavigation.AHBottomNavigationAdapter;
 import com.rd.PageIndicatorView;
 
+import net.kaunghtetlin.brupple.BurppleApp;
 import net.kaunghtetlin.brupple.R;
 import net.kaunghtetlin.brupple.adapters.GuidesAdapter;
 import net.kaunghtetlin.brupple.adapters.FeaturedImagePagerAdapter;
@@ -26,6 +28,8 @@ import net.kaunghtetlin.brupple.components.ViewPagerCustomDuration;
 import net.kaunghtetlin.brupple.data.vos.FeaturedVO;
 import net.kaunghtetlin.brupple.data.vos.GuidesVO;
 import net.kaunghtetlin.brupple.data.vos.PromotionsVO;
+import net.kaunghtetlin.brupple.mvp.presenters.BurpplePresenter;
+import net.kaunghtetlin.brupple.mvp.views.BurppleView;
 import net.kaunghtetlin.brupple.persistance.BurppleContract;
 import net.kaunghtetlin.brupple.utils.AppConstants;
 
@@ -34,11 +38,13 @@ import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 
+import javax.inject.Inject;
+
 import butterknife.BindView;
 import butterknife.ButterKnife;
 
 
-public class HomeActivity extends AppCompatActivity {
+public class HomeActivity extends AppCompatActivity implements BurppleView, LoaderManager.LoaderCallbacks<Cursor> {
 
     @BindView(R.id.vp_highlight_images)
     ViewPagerCustomDuration vpHighlightImages;
@@ -52,11 +58,11 @@ public class HomeActivity extends AppCompatActivity {
     @BindView(R.id.rv_promotion)
     RecyclerView rvPromotion;
 
-//    @BindView(R.id.bottom_navigation)
-//    BottomNavigationView bottomNavigationView;
-
     @BindView(R.id.bottom_navigation)
     AHBottomNavigation bottomNavigation;
+
+    @Inject
+    BurpplePresenter mPresenter;
 
     FeaturedImagePagerAdapter mFeaturedImagePagerAdapter;
 
@@ -75,6 +81,11 @@ public class HomeActivity extends AppCompatActivity {
         setContentView(R.layout.activity_home);
 
         ButterKnife.bind(this, this);
+
+        BurppleApp burppleApp = (BurppleApp) getApplicationContext();
+        burppleApp.getAppComponent().inject(this);
+
+        mPresenter.onCreate(this);
 
         Toolbar toolbar = (Toolbar) findViewById(R.id.tool_bar);
         setSupportActionBar(toolbar);
@@ -108,9 +119,9 @@ public class HomeActivity extends AppCompatActivity {
         //for bottom navigation
         setupBottomNavigation();
 
-        getSupportLoaderManager().initLoader(AppConstants.GUIDES_LIST_LOADER, null, guidesLoaderListener);
-        getSupportLoaderManager().initLoader(AppConstants.FEATURED_LIST_LOADER, null, FeaturedLoaderListener);
-        getSupportLoaderManager().initLoader(AppConstants.PROMOTIONS_LIST_LOADER, null, PromotionsLoaderListener);
+        getSupportLoaderManager().initLoader(AppConstants.GUIDES_LIST_LOADER, null, this);
+        getSupportLoaderManager().initLoader(AppConstants.FEATURED_LIST_LOADER, null, this);
+        getSupportLoaderManager().initLoader(AppConstants.PROMOTIONS_LIST_LOADER, null, this);
 
 //        getSupportLoaderManager().initLoader(AppConstants.GUIDES_LIST_LOADER, null, this);
 //        getSupportLoaderManager().initLoader(AppConstants.FEATURED_LIST_LOADER, null, this);
@@ -138,96 +149,56 @@ public class HomeActivity extends AppCompatActivity {
         return super.onOptionsItemSelected(item);
     }
 
-    private LoaderManager.LoaderCallbacks<Cursor> guidesLoaderListener = new LoaderManager.LoaderCallbacks<Cursor>() {
-        @Override
-        public Loader<Cursor> onCreateLoader(int id, Bundle args) {
-            return new CursorLoader(getApplicationContext(),
-                    BurppleContract.GuidesEntry.CONTENT_URI,
-                    null,
-                    null, null,
-                    null);
-        }
+    @Override
+    protected void onStart() {
+        super.onStart();
+        mPresenter.onStart();
+    }
 
-        @Override
-        public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
-            if (data != null && data.moveToFirst()) {
-                List<GuidesVO> guidesList = new ArrayList<>();
+    @Override
+    protected void onStop() {
+        super.onStop();
+        mPresenter.onStop();
+    }
 
-                do {
-                    GuidesVO guides = GuidesVO.parseFromCursor(data);
-                    guidesList.add(guides);
-                } while (data.moveToNext());
-                mGudieAdapter.setNewData(guidesList);
-            }
-        }
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        mPresenter.onDestroy();
+    }
 
-        @Override
-        public void onLoaderReset(Loader<Cursor> loader) {
+    @Override
+    protected void onPause() {
+        super.onPause();
+        mPresenter.onPause();
+    }
 
-        }
-    };
-
-    private LoaderManager.LoaderCallbacks<Cursor> FeaturedLoaderListener = new LoaderManager.LoaderCallbacks<Cursor>() {
-        @Override
-        public Loader<Cursor> onCreateLoader(int id, Bundle args) {
-            return new CursorLoader(getApplicationContext(),
-                    BurppleContract.FeaturedEntry.CONTENT_URI,
-                    null,
-                    null, null,
-                    null);
-        }
-
-        @Override
-        public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
-            if (data != null && data.moveToFirst()) {
-//            List<FeaturedVO> featuredList = new ArrayList<>();
-                List<String> images = new ArrayList<>();
-                do {
-                    FeaturedVO featured = FeaturedVO.parseFromCursor(data);
-//                featuredList.add(featured);
-                    images.add(featured.getBurppleFeaturedImage());
-                } while (data.moveToNext());
-                mFeaturedImagePagerAdapter.setImages(images);
-
-            }
-        }
-
-        @Override
-        public void onLoaderReset(Loader<Cursor> loader) {
-
-        }
-    };
+    @Override
+    protected void onResume() {
+        super.onResume();
+        mPresenter.onResume();
+    }
 
 
-    private LoaderManager.LoaderCallbacks<Cursor> PromotionsLoaderListener = new LoaderManager.LoaderCallbacks<Cursor>() {
-        @Override
-        public Loader<Cursor> onCreateLoader(int id, Bundle args) {
-            return new CursorLoader(getApplicationContext(),
-                    BurppleContract.PromotionsEntry.CONTENT_URI,
-                    null,
-                    null, null,
-                    null);
-        }
+    @Override
+    public void displayGuidesList(List<GuidesVO> guidesList) {
+        mGudieAdapter.setNewData(guidesList);
+    }
 
-        @Override
-        public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
-            if (data != null && data.moveToFirst()) {
-                List<PromotionsVO> promotionsList = new ArrayList<>();
-                do {
-                    PromotionsVO promotions = PromotionsVO.parseFromCursor(getApplicationContext(),data);
-//                featuredList.add(featured);
-                    promotionsList.add(promotions);
-                } while (data.moveToNext());
-                mPromotionsAdapter.setNewData(promotionsList);
-            }
-        }
+    @Override
+    public void displayPromotionsList(List<PromotionsVO> promotionsList) {
+        mPromotionsAdapter.setNewData(promotionsList);
+    }
 
-        @Override
-        public void onLoaderReset(Loader<Cursor> loader) {
+    @Override
+    public void displayFeaturedList(List<String> images) {
+        mFeaturedImagePagerAdapter.setImages(images);
+    }
 
-        }
-    };
-
+    @Override
+    public Context getContext() {
+        return getApplicationContext();
+    }
 
     private void setupImageViewPagerRotateAuto() {
         final Handler handler = new Handler();
@@ -271,6 +242,59 @@ public class HomeActivity extends AppCompatActivity {
         bottomNavigation.setCurrentItem(0);
         bottomNavigation.setNotificationBackgroundColor(Color.parseColor("#F63D2B"));
         bottomNavigation.setNotification("1", 3);
+
+    }
+
+    @Override
+    public Loader onCreateLoader(int id, Bundle args) {
+        switch (id) {
+            case AppConstants.FEATURED_LIST_LOADER:
+                return new CursorLoader(getApplicationContext(),
+                        BurppleContract.FeaturedEntry.CONTENT_URI,
+                        null,
+                        null,
+                        null,
+                        null);
+
+            case AppConstants.GUIDES_LIST_LOADER:
+                return new CursorLoader(getApplicationContext(),
+                        BurppleContract.GuidesEntry.CONTENT_URI,
+                        null,
+                        null,
+                        null,
+                        null);
+
+            case AppConstants.PROMOTIONS_LIST_LOADER:
+                return new CursorLoader(getApplicationContext(),
+                        BurppleContract.PromotionsEntry.CONTENT_URI,
+                        null,
+                        null, null,
+                        null);
+
+            default:
+                return null;
+
+        }
+    }
+
+    @Override
+    public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
+        switch (loader.getId()) {
+            case AppConstants.FEATURED_LIST_LOADER:
+                mPresenter.onFeaturedDataLoaded(data);
+                break;
+            case AppConstants.GUIDES_LIST_LOADER:
+                mPresenter.onGuidesDataLoaded(data);
+                break;
+            case AppConstants.PROMOTIONS_LIST_LOADER:
+                mPresenter.onPromotionsDataLoaded(getApplicationContext(), data);
+                break;
+
+        }
+    }
+
+    @Override
+    public void onLoaderReset(Loader loader) {
 
     }
 }

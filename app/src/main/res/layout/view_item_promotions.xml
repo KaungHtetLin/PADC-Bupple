@@ -23,6 +23,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:foreground="#41000000"
+                android:scaleType="centerCrop"
                 android:src="@drawable/promotion_placeholder" />
 
             <LinearLayout

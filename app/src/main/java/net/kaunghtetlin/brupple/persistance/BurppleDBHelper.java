@@ -72,9 +72,9 @@ public class BurppleDBHelper extends SQLiteOpenHelper {
     public void onCreate(SQLiteDatabase db) {
         db.execSQL(SQL_CREATE_FEATURED_TABLE);
         db.execSQL(SQL_CREATE_GUIDES_TABLE);
-        db.execSQL(SQL_CREATE_PROMOTIONS_TABLE);
         db.execSQL(SQL_CREATE_SHOP_TABLE);
         db.execSQL(SQL_CREATE_TERMS_TABLE);
+        db.execSQL(SQL_CREATE_PROMOTIONS_TABLE);
     }
 
     @Override

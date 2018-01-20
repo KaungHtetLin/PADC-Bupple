@@ -18,6 +18,8 @@ import org.greenrobot.eventbus.ThreadMode;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.inject.Inject;
+
 /**
  * Created by Kaung Htet Lin on 1/10/2018.
  */
@@ -26,40 +28,46 @@ public class GuidesModel {
 
     private static GuidesModel objInstance;
 
-    private List<GuidesVO> mGuides;
+//    private List<GuidesVO> mGuides;
     private int mGuidesPageIndex = 1;
 
-    private GuidesModel() {
+    @Inject
+    BurppleDataAgentImpl mBurppleDataAgentImpl;
+
+    public GuidesModel(Context context) {
         EventBus.getDefault().register(this);
-        mGuides = new ArrayList<>();
+//        mGuides = new ArrayList<>();
+
+        BurppleApp burppleApp = (BurppleApp) context.getApplicationContext();
+        burppleApp.getAppComponent().inject(this);
     }
 
-    public static GuidesModel getObjInstance() {
+ /*   public static GuidesModel getObjInstance() {
         if (objInstance == null) {
             objInstance = new GuidesModel();
         }
         return objInstance;
     }
-
+*/
     public void startLoadingGuides(Context context) {
-        BurppleDataAgentImpl.getObjInstance().loadGuides(AppConstants.ACCESS_TOKEN,
+        mBurppleDataAgentImpl.loadGuides(AppConstants.ACCESS_TOKEN,
                 mGuidesPageIndex, context);
     }
 
-    public List<GuidesVO> getGuides() {
+ /*   public List<GuidesVO> getGuides() {
         if (mGuides == null) {
             return new ArrayList<>();
         }
         return mGuides;
     }
-
+*/
     public void loadMoreGuides(Context context) {
-        BurppleDataAgentImpl.getObjInstance().loadGuides(AppConstants.ACCESS_TOKEN,
+        mBurppleDataAgentImpl.loadGuides(AppConstants.ACCESS_TOKEN,
                 mGuidesPageIndex, context);
     }
 
     public void forceRefresGuides(Context context) {
-        mGuides = new ArrayList<>();
+//        mGuides = new ArrayList<>();
         mGuidesPageIndex = 1;
 //        ConfigUtils.getObjInstance().savePageIndex(1);
         startLoadingGuides(context);
@@ -68,7 +76,7 @@ public class GuidesModel {
     @Subscribe(threadMode = ThreadMode.BACKGROUND)
     public void onGuidesDataLoaded(RestApiEvents.GuidesDataLoadedEvent event) {
 
-        mGuides.addAll(event.getLoadedGuides());
+//        mGuides.addAll(event.getLoadedGuides());
         mGuidesPageIndex = event.getLoadedPageIndex() + 1;
 //        ConfigUtils.getObjInstance().savePageIndex(event.getLoadedPageIndex()+1);
 
