@@ -19,7 +19,7 @@
             android:layout_weight="3">
 
             <ImageView
-                android:id="@+id/iv_promotion"
+                android:id="@+id/iv_promotions"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:foreground="#41000000"
@@ -47,7 +47,7 @@
                     android:textStyle="bold" />
 
                 <TextView
-                    android:id="@+id/tv_promotion_item_name"
+                    android:id="@+id/tv_promotions_title"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginBottom="@dimen/margin_medium"
@@ -99,7 +99,7 @@
             android:paddingTop="@dimen/margin_medium">
 
             <TextView
-                android:id="@+id/tv_promotion_food_name"
+                android:id="@+id/tv_shop_name"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:ellipsize="end"
@@ -110,7 +110,7 @@
                 android:textStyle="bold" />
 
             <TextView
-                android:id="@+id/tv_promotion_author"
+                android:id="@+id/tv_area"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:maxLines="1"

@@ -8,6 +8,7 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:scaleType="centerCrop"
+        android:foreground="#41000000"
         android:src="@drawable/highlight_placeholder" />
 
 </net.kaunghtetlin.brupple.viewitems.HighlightImagesViewItem>

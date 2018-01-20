@@ -16,12 +16,12 @@ import java.util.List;
  * Created by Kaung Htet Lin on 1/9/2018.
  */
 
-public class HighlightImagePagerAdapter extends PagerAdapter{
+public class FeaturedImagePagerAdapter extends PagerAdapter{
 
     private LayoutInflater mLayoutInflater;
     private List<String> mImages;
 
-    public HighlightImagePagerAdapter(Context context) {
+    public FeaturedImagePagerAdapter(Context context) {
         super();
         mLayoutInflater = LayoutInflater.from(context);
         mImages = new ArrayList<>();
@@ -30,8 +30,8 @@ public class HighlightImagePagerAdapter extends PagerAdapter{
 
     @Override
     public int getCount() {
-//        return mImages.size();
-        return 5;
+        return mImages.size();
+//        return 5;
     }
 
     @Override
@@ -42,7 +42,7 @@ public class HighlightImagePagerAdapter extends PagerAdapter{
     @Override
     public Object instantiateItem(ViewGroup container, int position) {
         HighlightImagesViewItem itemView = (HighlightImagesViewItem) mLayoutInflater.inflate(R.layout.view_item_highlight_image, container, false);
-//        itemView.setData(mImages.get(position));
+        itemView.setData(mImages.get(position));
         container.addView(itemView);
 
         return itemView;

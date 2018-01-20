@@ -1,11 +1,12 @@
 package net.kaunghtetlin.brupple.activities;
 
+import android.database.Cursor;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Handler;
-import android.support.annotation.NonNull;
-import android.support.design.widget.BottomNavigationView;
-import android.support.v4.view.ViewPager;
+import android.support.v4.app.LoaderManager;
+import android.support.v4.content.CursorLoader;
+import android.support.v4.content.Loader;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -15,20 +16,27 @@ import android.view.MenuItem;
 
 import com.aurelhubert.ahbottomnavigation.AHBottomNavigation;
 import com.aurelhubert.ahbottomnavigation.AHBottomNavigationAdapter;
-import com.aurelhubert.ahbottomnavigation.AHBottomNavigationItem;
 import com.rd.PageIndicatorView;
 
 import net.kaunghtetlin.brupple.R;
-import net.kaunghtetlin.brupple.adapters.GuideAdapter;
-import net.kaunghtetlin.brupple.adapters.HighlightImagePagerAdapter;
-import net.kaunghtetlin.brupple.adapters.PromotionAdapter;
+import net.kaunghtetlin.brupple.adapters.GuidesAdapter;
+import net.kaunghtetlin.brupple.adapters.FeaturedImagePagerAdapter;
+import net.kaunghtetlin.brupple.adapters.PromotionsAdapter;
 import net.kaunghtetlin.brupple.components.ViewPagerCustomDuration;
+import net.kaunghtetlin.brupple.data.vos.FeaturedVO;
+import net.kaunghtetlin.brupple.data.vos.GuidesVO;
+import net.kaunghtetlin.brupple.data.vos.PromotionsVO;
+import net.kaunghtetlin.brupple.persistance.BurppleContract;
+import net.kaunghtetlin.brupple.utils.AppConstants;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
+
 
 public class HomeActivity extends AppCompatActivity {
 
@@ -50,11 +58,10 @@ public class HomeActivity extends AppCompatActivity {
     @BindView(R.id.bottom_navigation)
     AHBottomNavigation bottomNavigation;
 
+    FeaturedImagePagerAdapter mFeaturedImagePagerAdapter;
 
-    HighlightImagePagerAdapter mHighlightImagePagerAdapter;
-
-    GuideAdapter mGudieAdapter;
-    PromotionAdapter mPromotionAdapter;
+    GuidesAdapter mGudieAdapter;
+    PromotionsAdapter mPromotionsAdapter;
 
     //variables for image view pager auto rotate
     int currentPage = 0;
@@ -73,120 +80,40 @@ public class HomeActivity extends AppCompatActivity {
         setSupportActionBar(toolbar);
 
         // ViewPager Image
-        mHighlightImagePagerAdapter = new HighlightImagePagerAdapter(getApplicationContext());
-        vpHighlightImages.setAdapter(mHighlightImagePagerAdapter);
-        vpHighlightImages.setOffscreenPageLimit(mHighlightImagePagerAdapter.getCount());
+        mFeaturedImagePagerAdapter = new FeaturedImagePagerAdapter(getApplicationContext());
+        vpHighlightImages.setAdapter(mFeaturedImagePagerAdapter);
+        vpHighlightImages.setOffscreenPageLimit(mFeaturedImagePagerAdapter.getCount());
 
         //for pageIndicator
-        pageIndicatorView.setCount(mHighlightImagePagerAdapter.getCount()); // specify total count of indicators
+        pageIndicatorView.setCount(mFeaturedImagePagerAdapter.getCount()); // specify total count of indicators
         pageIndicatorView.setSelection(0);
 
         //RecyclerView for Burpple Guide
         rvGuide.setLayoutManager(new LinearLayoutManager(getApplicationContext(),
                 LinearLayoutManager.HORIZONTAL, false));
 
-        mGudieAdapter = new GuideAdapter(getApplicationContext());
+        mGudieAdapter = new GuidesAdapter(getApplicationContext());
         rvGuide.setAdapter(mGudieAdapter);
 
         //RecyclerView for Promotions
         rvPromotion.setLayoutManager(new LinearLayoutManager(getApplicationContext(),
                 LinearLayoutManager.HORIZONTAL, false));
 
-        mPromotionAdapter = new PromotionAdapter(getApplicationContext());
-        rvPromotion.setAdapter(mPromotionAdapter);
+        mPromotionsAdapter = new PromotionsAdapter(getApplicationContext());
+        rvPromotion.setAdapter(mPromotionsAdapter);
 
         //set up for image view pager rotate automatically
-        final Handler handler = new Handler();
-        final Runnable Update = new Runnable() {
-            public void run() {
-                currentPage = vpHighlightImages.getCurrentItem() + 1;
-                if (currentPage == mHighlightImagePagerAdapter.getCount()) {
-                    currentPage = 0;
-                }
-                // for smoothscroll.. for this line i added two custom component
-                vpHighlightImages.setScrollDurationFactor(5);
-                vpHighlightImages.setCurrentItem(currentPage, true);
-            }
-        };
+        setupImageViewPagerRotateAuto();
 
-        timer = new Timer(); // This will create a new Thread
-        timer.schedule(new TimerTask() { // task to be scheduled
+        //for bottom navigation
+        setupBottomNavigation();
 
-            @Override
-            public void run() {
-                handler.post(Update);
-            }
-        }, DELAY_MS, PERIOD_MS);
+        getSupportLoaderManager().initLoader(AppConstants.GUIDES_LIST_LOADER, null, guidesLoaderListener);
+        getSupportLoaderManager().initLoader(AppConstants.FEATURED_LIST_LOADER, null, FeaturedLoaderListener);
+        getSupportLoaderManager().initLoader(AppConstants.PROMOTIONS_LIST_LOADER, null, PromotionsLoaderListener);
 
-     /*   // for bottom navigation view
-        bottomNavigationView.setOnNavigationItemSelectedListener(
-                new BottomNavigationView.OnNavigationItemSelectedListener() {
-                    @Override
-                    public boolean onNavigationItemSelected(@NonNull MenuItem item) {
-                        switch (item.getItemId()) {
-                            case R.id.action_explore:
-
-                            case R.id.action_guide:
-
-                            case R.id.action_add:
-
-                            case R.id.action_activity:
-
-                            case R.id.action_profile:
-
-                        }
-                        return true;
-                    }
-                });*/
-
-        //new bottom navigation
-//        AHBottomNavigationItem iExplore = new AHBottomNavigationItem(R.string.txt_explore, R.drawable.ic_explore_24dp, R.color.primary);
-//        AHBottomNavigationItem iGuide = new AHBottomNavigationItem(R.string.txt_guide, R.drawable.ic_guide_24dp, R.color.primary);
-//        AHBottomNavigationItem iAdd = new AHBottomNavigationItem(R.string.txt_add, R.drawable.ic_add_box_24dp, R.color.primary);
-//        AHBottomNavigationItem iActivity= new AHBottomNavigationItem(R.string.txt_activity, R.drawable.ic_activity_24dp, R.color.primary);
-//        AHBottomNavigationItem iProfile= new AHBottomNavigationItem(R.string.txt_profile, R.drawable.ic_person_24dp, R.color.primary);
-
-//        int[] tabColors = getApplicationContext().getResources().getIntArray(R.array.tab_colors);
-        AHBottomNavigationAdapter navigationAdapter = new AHBottomNavigationAdapter(this, R.menu.bottom_navigation_menu);
-        navigationAdapter.setupWithBottomNavigation(bottomNavigation);
-
-        // Set background color
-        bottomNavigation.setDefaultBackgroundColor(getResources().getColor(R.color.pure_white));
-
-// Disable the translation inside the CoordinatorLayout
-        bottomNavigation.setBehaviorTranslationEnabled(false);
-
-// Change colors
-        bottomNavigation.setAccentColor(getResources().getColor(R.color.primary));
-        bottomNavigation.setInactiveColor(getResources().getColor(R.color.divider));
-
-// Force to tint the drawable (useful for font with icon for example)
-        bottomNavigation.setForceTint(true);
-
-// Display color under navigation bar (API 21+)
-// Don't forget these lines in your style-v21
-// <item name="android:windowTranslucentNavigation">true</item>
-// <item name="android:fitsSystemWindows">true</item>
-        bottomNavigation.setTranslucentNavigationEnabled(true);
-
-        bottomNavigation.setBehaviorTranslationEnabled(true);
-// Manage titles
-//        bottomNavigation.setTitleState(AHBottomNavigation.TitleState.SHOW_WHEN_ACTIVE);
-        bottomNavigation.setTitleState(AHBottomNavigation.TitleState.ALWAYS_SHOW);
-//        bottomNavigation.setTitleState(AHBottomNavigation.TitleState.ALWAYS_HIDE);
-
-// Use colored navigation with circle reveal effect
-//        bottomNavigation.setColored(true);
-
-// Set current item programmatically
-        bottomNavigation.setCurrentItem(0);
-
-// Customize notification (title, background, typeface)
-        bottomNavigation.setNotificationBackgroundColor(Color.parseColor("#F63D2B"));
-
-// Add or remove notification for each item
-        bottomNavigation.setNotification("1", 3);
-
+//        getSupportLoaderManager().initLoader(AppConstants.GUIDES_LIST_LOADER, null, this);
+//        getSupportLoaderManager().initLoader(AppConstants.FEATURED_LIST_LOADER, null, this);
     }
 
     @Override
@@ -210,22 +137,140 @@ public class HomeActivity extends AppCompatActivity {
 
         return super.onOptionsItemSelected(item);
     }
-    /*
-    appBarLayout.addOnOffsetChangedListener(new AppBarLayout.OnOffsetChangedListener() {
-        boolean isShow = false;
-        int scrollRange = -1;
 
-        @Override public void onOffsetChanged(AppBarLayout appBarLayout, int verticalOffset) {
-            if (scrollRange == -1) {
-                scrollRange = appBarLayout.getTotalScrollRange();
-            }
-            if (scrollRange + verticalOffset == 0) {
-                getSupportActionBar().setTitle(series.title_english);
-                isShow = true;
-            } else if (isShow) {
-                getSupportActionBar().setTitle("");
-                isShow = false;
+    private LoaderManager.LoaderCallbacks<Cursor> guidesLoaderListener = new LoaderManager.LoaderCallbacks<Cursor>() {
+        @Override
+        public Loader<Cursor> onCreateLoader(int id, Bundle args) {
+            return new CursorLoader(getApplicationContext(),
+                    BurppleContract.GuidesEntry.CONTENT_URI,
+                    null,
+                    null, null,
+                    null);
+        }
+
+        @Override
+        public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
+            if (data != null && data.moveToFirst()) {
+                List<GuidesVO> guidesList = new ArrayList<>();
+
+                do {
+                    GuidesVO guides = GuidesVO.parseFromCursor(data);
+                    guidesList.add(guides);
+                } while (data.moveToNext());
+                mGudieAdapter.setNewData(guidesList);
             }
         }
-    });*/
+
+        @Override
+        public void onLoaderReset(Loader<Cursor> loader) {
+
+        }
+    };
+
+    private LoaderManager.LoaderCallbacks<Cursor> FeaturedLoaderListener = new LoaderManager.LoaderCallbacks<Cursor>() {
+        @Override
+        public Loader<Cursor> onCreateLoader(int id, Bundle args) {
+            return new CursorLoader(getApplicationContext(),
+                    BurppleContract.FeaturedEntry.CONTENT_URI,
+                    null,
+                    null, null,
+                    null);
+        }
+
+        @Override
+        public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
+            if (data != null && data.moveToFirst()) {
+//            List<FeaturedVO> featuredList = new ArrayList<>();
+                List<String> images = new ArrayList<>();
+                do {
+                    FeaturedVO featured = FeaturedVO.parseFromCursor(data);
+//                featuredList.add(featured);
+                    images.add(featured.getBurppleFeaturedImage());
+                } while (data.moveToNext());
+                mFeaturedImagePagerAdapter.setImages(images);
+
+            }
+        }
+
+        @Override
+        public void onLoaderReset(Loader<Cursor> loader) {
+
+        }
+    };
+
+
+    private LoaderManager.LoaderCallbacks<Cursor> PromotionsLoaderListener = new LoaderManager.LoaderCallbacks<Cursor>() {
+        @Override
+        public Loader<Cursor> onCreateLoader(int id, Bundle args) {
+            return new CursorLoader(getApplicationContext(),
+                    BurppleContract.PromotionsEntry.CONTENT_URI,
+                    null,
+                    null, null,
+                    null);
+        }
+
+        @Override
+        public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
+            if (data != null && data.moveToFirst()) {
+                List<PromotionsVO> promotionsList = new ArrayList<>();
+                do {
+                    PromotionsVO promotions = PromotionsVO.parseFromCursor(getApplicationContext(),data);
+//                featuredList.add(featured);
+                    promotionsList.add(promotions);
+                } while (data.moveToNext());
+                mPromotionsAdapter.setNewData(promotionsList);
+            }
+        }
+
+        @Override
+        public void onLoaderReset(Loader<Cursor> loader) {
+
+        }
+    };
+
+
+    private void setupImageViewPagerRotateAuto() {
+        final Handler handler = new Handler();
+        final Runnable Update = new Runnable() {
+            public void run() {
+                currentPage = vpHighlightImages.getCurrentItem() + 1;
+                if (currentPage == mFeaturedImagePagerAdapter.getCount()) {
+                    currentPage = 0;
+                }
+                // for smoothscroll.. for this line i added two custom component
+                vpHighlightImages.setScrollDurationFactor(5);
+                vpHighlightImages.setCurrentItem(currentPage, true);
+            }
+        };
+
+        timer = new Timer(); // This will create a new Thread
+        timer.schedule(new TimerTask() { // task to be scheduled
+
+            @Override
+            public void run() {
+                handler.post(Update);
+            }
+        }, DELAY_MS, PERIOD_MS);
+
+    }
+
+    private void setupBottomNavigation() {
+
+        AHBottomNavigationAdapter navigationAdapter = new AHBottomNavigationAdapter(this, R.menu.bottom_navigation_menu);
+        navigationAdapter.setupWithBottomNavigation(bottomNavigation);
+
+        bottomNavigation.setDefaultBackgroundColor(getResources().getColor(R.color.pure_white));
+        bottomNavigation.setBehaviorTranslationEnabled(false);
+        bottomNavigation.setAccentColor(getResources().getColor(R.color.primary));
+        bottomNavigation.setInactiveColor(getResources().getColor(R.color.divider));
+        bottomNavigation.setForceTint(true);
+        bottomNavigation.setTranslucentNavigationEnabled(true);
+
+        bottomNavigation.setBehaviorTranslationEnabled(true);
+        bottomNavigation.setTitleState(AHBottomNavigation.TitleState.ALWAYS_SHOW);
+        bottomNavigation.setCurrentItem(0);
+        bottomNavigation.setNotificationBackgroundColor(Color.parseColor("#F63D2B"));
+        bottomNavigation.setNotification("1", 3);
+
+    }
 }
